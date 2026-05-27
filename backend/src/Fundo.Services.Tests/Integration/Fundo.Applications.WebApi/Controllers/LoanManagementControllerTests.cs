@@ -5,11 +5,11 @@ using Xunit;
 
 namespace Fundo.Services.Tests.Integration
 {
-    public class LoanManagementControllerTests : IClassFixture<WebApplicationFactory<Fundo.Applications.WebApi.Startup>>
+    public class LoanManagementControllerTests : IClassFixture<WebApplicationFactory<Fundo.Applications.WebApi.Program>>
     {
         private readonly HttpClient _client;
 
-        public LoanManagementControllerTests(WebApplicationFactory<Fundo.Applications.WebApi.Startup> factory)
+        public LoanManagementControllerTests(WebApplicationFactory<Fundo.Applications.WebApi.Program> factory)
         {
             _client = factory.CreateClient(new WebApplicationFactoryClientOptions
             {

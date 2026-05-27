@@ -1,16 +1,23 @@
-﻿using Microsoft.AspNetCore;
-using Microsoft.AspNetCore.Hosting;
 using System;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Fundo.Applications.WebApi
 {
-    public static class Program
+    public class Program
     {
         public static void Main(string[] args)
         {
             try
             {
-                CreateWebHostBuilder(args).Build().Run();
+                var builder = WebApplication.CreateBuilder(args);
+                builder.Services.AddControllers();
+
+                var app = builder.Build();
+                app.UseRouting();
+                app.UseAuthorization();
+                app.MapControllers();
+                app.Run();
             }
             catch (Exception ex)
             {
@@ -20,12 +27,6 @@ namespace Fundo.Applications.WebApi
             {
                 Console.WriteLine("Application shutting down.");
             }
-        }
-
-        public static IWebHostBuilder CreateWebHostBuilder(string[] args)
-        {
-            return WebHost.CreateDefaultBuilder(args)
-                .UseStartup<Startup>();
         }
     }
 }
