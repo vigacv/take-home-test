@@ -1,4 +1,4 @@
-using Fundo.Applications.WebApi.Models;
+﻿using Fundo.Applications.WebApi.Models;
 using Fundo.Applications.WebApi.Services;
 using Microsoft.AspNetCore.Mvc;
 
@@ -6,7 +6,7 @@ namespace Fundo.Applications.WebApi.Controllers;
 
 [ApiController]
 [Route("loans")]
-public class LoanManagementController(ILoanService loanService) : ControllerBase
+public class LoanManagementController(ILoanService loanService, ILogger<LoanManagementController> logger) : ControllerBase
 {
     [HttpGet]
     public async Task<ActionResult<IEnumerable<LoanResponse>>> GetAll()
@@ -19,7 +19,12 @@ public class LoanManagementController(ILoanService loanService) : ControllerBase
     public async Task<ActionResult<LoanResponse>> GetById(Guid id)
     {
         var loan = await loanService.GetByIdAsync(id);
-        return loan is null ? NotFound() : Ok(loan);
+        if (loan is null)
+        {
+            logger.LogWarning("Loan {LoanId} not found", id);
+            return NotFound();
+        }
+        return Ok(loan);
     }
 
     [HttpPost]
@@ -35,11 +40,18 @@ public class LoanManagementController(ILoanService loanService) : ControllerBase
         try
         {
             var loan = await loanService.MakePaymentAsync(id, request);
-            return loan is null ? NotFound() : Ok(loan);
+            if (loan is null)
+            {
+                logger.LogWarning("Loan {LoanId} not found for payment", id);
+                return NotFound();
+            }
+            return Ok(loan);
         }
         catch (InvalidOperationException ex)
         {
+            logger.LogWarning(ex, "Payment failed for loan {LoanId}: {Message}", id, ex.Message);
             return BadRequest(new { error = ex.Message });
         }
+
     }
 }
