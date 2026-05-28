@@ -29,6 +29,24 @@ The API will be available at `https://localhost:5001` (HTTPS) and `http://localh
 
 ---
 
+## Swagger UI
+
+Once the API is running, the interactive API documentation is available at:
+
+```
+https://localhost:5001/swagger
+```
+
+To test protected endpoints directly in the UI:
+
+1. Call `POST /auth/login` with `{ "username": "admin", "password": "admin123" }` and copy the `accessToken` from the response.
+2. Click the **Authorize** button at the top of the page.
+3. Paste the token and click **Authorize**.
+
+All subsequent requests made through the UI will include the Bearer token automatically.
+
+---
+
 ## Running locally
 
 ### 1. Configure the database connection
@@ -60,13 +78,7 @@ dotnet run --project .\Fundo.Applications.WebApi
 The API listens on `https://localhost:5001` (HTTPS) and `http://localhost:5000` (HTTP).  
 Database migrations are applied automatically on startup.
 
-Verify it is running:
-
-```http
-GET https://localhost:5001/loan
-```
-
-Expected response: **200 OK**
+Verify it is running by opening `https://localhost:5001/swagger` in your browser.
 
 ---
 

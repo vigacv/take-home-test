@@ -9,6 +9,8 @@ namespace Fundo.Applications.WebApi.Controllers;
 public class AuthController(ITokenService tokenService, IConfiguration configuration) : ControllerBase
 {
     [HttpPost("login")]
+    [ProducesResponseType<TokenResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ErrorResponse>(StatusCodes.Status401Unauthorized)]
     public IActionResult Login([FromBody] LoginRequest request)
     {
         var users = configuration.GetSection("Users").Get<UserConfig[]>() ?? [];
@@ -18,7 +20,7 @@ public class AuthController(ITokenService tokenService, IConfiguration configura
             u.Password == request.Password);
 
         if (user is null)
-            return Unauthorized(new { error = "Invalid credentials." });
+            return Unauthorized(new ErrorResponse("Invalid credentials."));
 
         var token = tokenService.GenerateToken(request.Username);
         return Ok(token);

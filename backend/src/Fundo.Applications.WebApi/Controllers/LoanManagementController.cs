@@ -8,9 +8,11 @@ namespace Fundo.Applications.WebApi.Controllers;
 [ApiController]
 [Route("loans")]
 [Authorize]
+[ProducesResponseType(StatusCodes.Status401Unauthorized)]
 public class LoanManagementController(ILoanService loanService, ILogger<LoanManagementController> logger) : ControllerBase
 {
     [HttpGet]
+    [ProducesResponseType<IEnumerable<LoanResponse>>(StatusCodes.Status200OK)]
     public async Task<ActionResult<IEnumerable<LoanResponse>>> GetAll()
     {
         var loans = await loanService.GetAllAsync();
@@ -18,6 +20,8 @@ public class LoanManagementController(ILoanService loanService, ILogger<LoanMana
     }
 
     [HttpGet("{id:guid}")]
+    [ProducesResponseType<LoanResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<LoanResponse>> GetById(Guid id)
     {
         var loan = await loanService.GetByIdAsync(id);
@@ -30,6 +34,8 @@ public class LoanManagementController(ILoanService loanService, ILogger<LoanMana
     }
 
     [HttpPost]
+    [ProducesResponseType<LoanResponse>(StatusCodes.Status201Created)]
+    [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<LoanResponse>> Create([FromBody] CreateLoanRequest request)
     {
         var loan = await loanService.CreateAsync(request);
@@ -37,6 +43,9 @@ public class LoanManagementController(ILoanService loanService, ILogger<LoanMana
     }
 
     [HttpPost("{id:guid}/payment")]
+    [ProducesResponseType<LoanResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ErrorResponse>(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<LoanResponse>> MakePayment(Guid id, [FromBody] MakePaymentRequest request)
     {
         try
@@ -52,8 +61,7 @@ public class LoanManagementController(ILoanService loanService, ILogger<LoanMana
         catch (InvalidOperationException ex)
         {
             logger.LogWarning(ex, "Payment failed for loan {LoanId}: {Message}", id, ex.Message);
-            return BadRequest(new { error = ex.Message });
+            return BadRequest(new ErrorResponse(ex.Message));
         }
-
     }
 }

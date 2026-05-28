@@ -6,6 +6,7 @@ using Fundo.Infrastructure.Extensions;
 using Fundo.Infrastructure.Repositories;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi;
 using Serilog;
 using Serilog.Events;
 
@@ -26,6 +27,25 @@ try
         .AddJsonOptions(opts =>
             opts.JsonSerializerOptions.PropertyNamingPolicy =
                 System.Text.Json.JsonNamingPolicy.CamelCase);
+
+    builder.Services.AddEndpointsApiExplorer();
+    builder.Services.AddSwaggerGen(options =>
+    {
+        options.SwaggerDoc("v1", new OpenApiInfo { Title = "Fundo Loan Management API", Version = "v1" });
+        options.AddSecurityDefinition("bearer", new OpenApiSecurityScheme
+        {
+            Name = "Authorization",
+            Type = SecuritySchemeType.Http,
+            Scheme = "bearer",
+            BearerFormat = "JWT",
+            In = ParameterLocation.Header,
+            Description = "Enter the JWT token obtained from POST /auth/login.",
+        });
+        options.AddSecurityRequirement(document => new OpenApiSecurityRequirement
+        {
+            [new OpenApiSecuritySchemeReference("bearer", document)] = []
+        });
+    });
 
     builder.Services.AddCors(options =>
         options.AddDefaultPolicy(policy =>
@@ -72,6 +92,9 @@ try
     var app = builder.Build();
 
     app.Services.InitializeFundoDatabase();
+
+    app.UseSwagger();
+    app.UseSwaggerUI();
 
     app.UseSerilogRequestLogging();
     app.UseMiddleware<ExceptionHandlingMiddleware>();
