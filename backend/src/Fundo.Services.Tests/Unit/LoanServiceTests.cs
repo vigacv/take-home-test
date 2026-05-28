@@ -69,7 +69,11 @@ public class LoanServiceTests
         var request = new CreateLoanRequest { Amount = 2000m, ApplicantName = "Carol" };
         _repositoryMock
             .Setup(r => r.CreateAsync(It.IsAny<Loan>()))
-            .ReturnsAsync((Loan l) => { l.Id = Guid.NewGuid(); return l; });
+            .ReturnsAsync((Loan l) =>
+            {
+                var loan = new Loan(l.Amount, l.ApplicantName) { Id = l.Id };
+                return loan;
+            });
 
         var result = await _sut.CreateAsync(request);
 
