@@ -1,13 +1,34 @@
 using System.Net;
+using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using System.Security.Claims;
+using System.Text.Encodings.Web;
 using FluentAssertions;
 using Fundo.Applications.WebApi.Models;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Xunit;
 
 namespace Fundo.Services.Tests.Integration;
+
+public class TestAuthHandler(
+    IOptionsMonitor<AuthenticationSchemeOptions> options,
+    ILoggerFactory logger,
+    UrlEncoder encoder) : AuthenticationHandler<AuthenticationSchemeOptions>(options, logger, encoder)
+{
+    protected override Task<AuthenticateResult> HandleAuthenticateAsync()
+    {
+        var claims = new[] { new Claim(ClaimTypes.Name, "TestUser") };
+        var identity = new ClaimsIdentity(claims, "Test");
+        var ticket = new AuthenticationTicket(new ClaimsPrincipal(identity), "Test");
+        return Task.FromResult(AuthenticateResult.Success(ticket));
+    }
+}
 
 public class TestWebApplicationFactory : WebApplicationFactory<Program>
 {
@@ -20,6 +41,12 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program>
             {
                 ["Testing:DbName"] = dbName
             }));
+        builder.ConfigureServices(services =>
+        {
+            services.AddAuthentication("Test")
+                .AddScheme<AuthenticationSchemeOptions, TestAuthHandler>("Test", _ => { });
+            services.AddAuthorization();
+        });
     }
 }
 
