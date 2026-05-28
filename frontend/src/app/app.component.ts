@@ -1,40 +1,23 @@
-import { Component } from '@angular/core';
+import { Component, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatTableModule } from '@angular/material/table';
-import { MatButtonModule } from '@angular/material/button';
+import { LoanService } from './loan.service';
+import { Loan } from './loan.model';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [CommonModule, MatTableModule, MatButtonModule],
+  imports: [CommonModule, MatTableModule],
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss'],
 })
-export class AppComponent {
-  displayedColumns: string[] = [
-    'loanAmount',
-    'currentBalance',
-    'applicant',
-    'status',
-  ];
-  loans = [
-    {
-      loanAmount: 25000.00,
-      currentBalance: 18750.00,
-      applicant: 'John Doe',
-      status: 'active',
-    },
-    {
-      loanAmount: 15000.00,
-      currentBalance: 0,
-      applicant: 'Jane Smith',
-      status: 'paid',
-    },
-    {
-      loanAmount: 50000.00,
-      currentBalance: 32500.00,
-      applicant: 'Robert Johnson',
-      status: 'active',
-    },
-  ];
+export class AppComponent implements OnInit {
+  private readonly loanService = inject(LoanService);
+
+  displayedColumns: string[] = ['amount', 'currentBalance', 'applicantName', 'status'];
+  loans = signal<Loan[]>([]);
+
+  ngOnInit(): void {
+    this.loanService.getAll().subscribe(loans => this.loans.set(loans));
+  }
 }
