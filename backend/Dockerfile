@@ -16,7 +16,7 @@ RUN dotnet publish src/Fundo.Applications.WebApi/Fundo.Applications.WebApi.cspro
 
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
 WORKDIR /app
-EXPOSE 8080
+EXPOSE 5000 5001
 
 COPY --from=build /app/publish .
 
