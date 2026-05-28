@@ -1,11 +1,7 @@
-using System;
+using Fundo.Applications.WebApi.Services;
 using Fundo.Domain.Repositories;
-using Fundo.Infrastructure.Data;
+using Fundo.Infrastructure.Extensions;
 using Fundo.Infrastructure.Repositories;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace Fundo.Applications.WebApi
 {
@@ -13,37 +9,40 @@ namespace Fundo.Applications.WebApi
     {
         public static void Main(string[] args)
         {
-            try
+            var builder = WebApplication.CreateBuilder(args);
+
+            builder.Services.AddControllers()
+                .AddJsonOptions(opts =>
+                    opts.JsonSerializerOptions.PropertyNamingPolicy =
+                        System.Text.Json.JsonNamingPolicy.CamelCase);
+
+            builder.Services.AddCors(options =>
+                options.AddDefaultPolicy(policy =>
+                    policy.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod()));
+
+            if (builder.Environment.IsEnvironment("Testing"))
             {
-                var builder = WebApplication.CreateBuilder(args);
-                builder.Services.AddControllers();
-
-                builder.Services.AddDbContext<FundoDbContext>(options =>
-                    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
-
-                builder.Services.AddScoped<ILoanRepository, LoanRepository>();
-
-                var app = builder.Build();
-
-                using (var scope = app.Services.CreateScope())
-                {
-                    var db = scope.ServiceProvider.GetRequiredService<FundoDbContext>();
-                    db.Database.Migrate();
-                }
-
-                app.UseRouting();
-                app.UseAuthorization();
-                app.MapControllers();
-                app.Run();
+                var dbName = builder.Configuration["Testing:DbName"] ?? "FundoTest";
+                builder.Services.AddFundoInMemory(dbName);
             }
-            catch (Exception ex)
+            else
             {
-                Console.WriteLine($"Unhandled WebApi exception: {ex.Message}");
+                builder.Services.AddFundoSqlServer(
+                    builder.Configuration.GetConnectionString("DefaultConnection")!);
             }
-            finally
-            {
-                Console.WriteLine("Application shutting down.");
-            }
+
+            builder.Services.AddScoped<ILoanRepository, LoanRepository>();
+            builder.Services.AddScoped<ILoanService, LoanService>();
+
+            var app = builder.Build();
+
+            app.Services.InitializeFundoDatabase();
+
+            app.UseCors();
+            app.UseRouting();
+            app.UseAuthorization();
+            app.MapControllers();
+            app.Run();
         }
     }
 }
