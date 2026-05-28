@@ -1,9 +1,5 @@
-using System;
-using System.Collections.Generic;
 using System.Net;
-using System.Net.Http;
 using System.Net.Http.Json;
-using System.Threading.Tasks;
 using FluentAssertions;
 using Fundo.Applications.WebApi.Models;
 using Microsoft.AspNetCore.Hosting;
@@ -13,7 +9,7 @@ using Xunit;
 
 namespace Fundo.Services.Tests.Integration;
 
-public class TestWebApplicationFactory : WebApplicationFactory<Fundo.Applications.WebApi.Program>
+public class TestWebApplicationFactory : WebApplicationFactory<Program>
 {
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
