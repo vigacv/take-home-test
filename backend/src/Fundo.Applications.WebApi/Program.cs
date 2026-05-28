@@ -1,8 +1,11 @@
+using System.Text;
 using Fundo.Applications.WebApi.Middleware;
 using Fundo.Applications.WebApi.Services;
 using Fundo.Domain.Repositories;
 using Fundo.Infrastructure.Extensions;
 using Fundo.Infrastructure.Repositories;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
 using Serilog;
 using Serilog.Events;
 
@@ -41,6 +44,30 @@ try
 
     builder.Services.AddScoped<ILoanRepository, LoanRepository>();
     builder.Services.AddScoped<ILoanService, LoanService>();
+    builder.Services.AddScoped<ITokenService, TokenService>();
+
+    if (!builder.Environment.IsEnvironment("Testing"))
+    {
+        var jwtKey = builder.Configuration["Jwt:Key"]!;
+        var jwtIssuer = builder.Configuration["Jwt:Issuer"]!;
+        var jwtAudience = builder.Configuration["Jwt:Audience"]!;
+
+        builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+            .AddJwtBearer(options =>
+            {
+                options.TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuer = true,
+                    ValidateAudience = true,
+                    ValidateLifetime = true,
+                    ValidateIssuerSigningKey = true,
+                    ValidIssuer = jwtIssuer,
+                    ValidAudience = jwtAudience,
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
+                };
+            });
+        builder.Services.AddAuthorization();
+    }
 
     var app = builder.Build();
 
@@ -50,6 +77,7 @@ try
     app.UseMiddleware<ExceptionHandlingMiddleware>();
     app.UseCors();
     app.UseRouting();
+    app.UseAuthentication();
     app.UseAuthorization();
     app.MapControllers();
     app.Run();

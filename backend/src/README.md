@@ -91,6 +91,59 @@ Tests use an in-memory database — no SQL Server required.
 
 ---
 
+## Authentication
+
+The API uses **JWT Bearer** authentication. All `/loans` endpoints require a valid token.
+
+### Obtaining a token
+
+```http
+POST https://localhost:5001/auth/login
+Content-Type: application/json
+
+{
+  "username": "admin",
+  "password": "admin123"
+}
+```
+
+Response:
+
+```json
+{
+  "accessToken": "<jwt>",
+  "expiresInSeconds": 3600
+}
+```
+
+### Using the token
+
+Include the token in the `Authorization` header for every protected request:
+
+```
+Authorization: Bearer <accessToken>
+```
+
+### Configuration
+
+Credentials and JWT settings are configured in `appsettings.json`:
+
+```json
+"Jwt": {
+  "Key": "...",
+  "Issuer": "fundo-api",
+  "Audience": "fundo-client",
+  "ExpiresInMinutes": 60
+},
+"Users": [
+  { "Username": "admin", "Password": "admin123" }
+]
+```
+
+> **Note:** Authentication is skipped in the `Testing` environment so that integration tests run without a token.
+
+---
+
 ## Notes
 
 Feel free to modify the code as needed, but try to **respect and extend the current architecture**, as this is intended to be a replica of the Fundo codebase.

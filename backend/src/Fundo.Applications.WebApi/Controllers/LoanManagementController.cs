@@ -1,11 +1,13 @@
 ﻿using Fundo.Applications.WebApi.Models;
 using Fundo.Applications.WebApi.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Fundo.Applications.WebApi.Controllers;
 
 [ApiController]
 [Route("loans")]
+[Authorize]
 public class LoanManagementController(ILoanService loanService, ILogger<LoanManagementController> logger) : ControllerBase
 {
     [HttpGet]
