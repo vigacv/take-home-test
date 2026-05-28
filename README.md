@@ -1,83 +1,44 @@
-# **Take-Home Test: Backend-Focused Full-Stack Developer (.NET C# & Angular)**
+# Solution
 
-## **Objective**
+## Architecture
 
-This take-home test evaluates your ability to develop and integrate a .NET Core (C#) backend with an Angular frontend, focusing on API design, database integration, and basic DevOps practices.
+The backend follows the clean architecture pattern, separating concerns in 4 layers:
 
-## **Instructions**
+| Layer | Project | Responsibility |
+|---|---|---|
+| Domain | `Fundo.Domain` | Domain entities and repository interfaces |
+| Infrastructure | `Fundo.Infrastructure` | EF Core implementation with SQL Server, migrations, seed data |
+| Application | `Fundo.Applications.WebApi` | Controllers, services, request/response models, middleware |
+| Tests | `Fundo.Services.Tests` | Unit and integration tests |
 
-1.  **Fork the provided repository** before starting the implementation.
-2.  Implement the requested features in your forked repository.
-3.  Once you have completed the implementation, **send the link** to your forked repository via email for review.
+The frontend is a basic Angular app that displays loans retrieved from the backend API and incorporates login.
 
-## **Task**
+## Implementation Approach
 
-You will build a simple **Loan Management System** with a **.NET Core backend (C#)** exposing RESTful APIs and a **basic Angular frontend** consuming these APIs.
+1. **Update .NET and Angular to latest versions:** The project came with .NET 6 and Angular 19, which are outdated. Updated to .NET 10 and Angular 21, which involved some refactoring and updating dependencies.
+2. **Resolve vulnerabilities:** Some packages included in the solution had known vulnerabilities. Before adding more dependencies, existing packages were updated to resolve them.
+3. **Update .gitignore:** Some files were incorrectly ignored, like `package-lock.json` and EF migrations, so those exclusions were removed.
+4. **Implement domain models and infrastructure:** Implemented domain entities, repository interfaces, and the EF Core SQL Server implementation including migrations and seed data.
+5. **Add RESTful API endpoints:** The core deliverable — implemented following clean architecture conventions with unit and integration test coverage.
+6. **Containerize the backend:** Implemented a Dockerfile to build the backend image and a Docker Compose file to run it alongside the SQL Server image. Challenges encountered are described below.
+7. **Frontend features:** Connected the Angular frontend to the backend to display loans.
+8. **Logging and exception handling** *(optional)*: Used Serilog for structured logging and added a global exception handler middleware.
+9. **Authentication** *(optional)*: Implemented JWT Bearer authentication, requiring a valid token on all loan endpoints. Updated the frontend to support login/logout.
+10. **GitHub Actions pipeline** *(optional)*: Added a CI pipeline to build and test the backend on every push.
+11. **Swagger/OpenAPI documentation** *(extra)*: Added Swagger with JWT support so reviewers can explore and test the API directly in the browser without needing a separate client.
 
----
+## Features Completed
 
-## **Requirements**
+All required features were implemented: RESTful API endpoints, EF Core with SQL Server, seed data, unit and integration tests, Docker/Docker Compose, and the Angular frontend. All three optional bonus items (logging, authentication, GitHub Actions) were also completed.
 
-### **1. Backend (API) - .NET Core**
+## Challenges Faced
 
-* Create a **RESTful API** in .NET Core to handle **loan applications**.
-* Implement the following endpoints:
-    * `POST /loans` → Create a new loan.
-    * `GET /loans/{id}` → Retrieve loan details.
-    * `GET /loans` → List all loans.
-    * `POST /loans/{id}/payment` → Deduct from `currentBalance`.
-* Loan example (feel free to improve it):
+- **Docker image download failures:** When setting up Docker Compose, pulling the `mssql/server` image consistently failed mid-download. After debugging with manual `curl` requests to the specific failing layer URLs, the root cause was a connection reset occurring after a period of time — likely a CDN or ISP-level issue. The workaround was routing through a VPN to pull the image successfully.
+- **Integration tests after adding authentication:** Once JWT authentication was added, integration tests stopped working because the test host had no valid token. The solution was to add a custom test authentication handler that automatically satisfies the auth requirement in the `Testing` environment, keeping tests isolated from the auth flow.
 
-    ```json
-    {
-        "amount": 1500.00, // Amount requested
-        "currentBalance": 500.00, // Remaining balance
-        "applicantName": "Maria Silva", // User name
-        "status": "active" // Status can be active or paid
-    }
-    ```
+## Improvements Given More Time
 
-* Use **Entity Framework Core** with **SQL Server**.
-* Create seed data to populate the loans (the frontend will consume this).
-* Write **unit/integration tests for the API** (xUnit or NUnit).
-* **Dockerize** the backend and create a **Docker Compose** file.
-* Create a README with setup instructions.
-
-### **2. Frontend - Angular (Simplified UI)**  
-
-Develop a **lightweight Angular app** to interact with the backend
-
-#### **Features:**  
-- A **table** to display a list of existing loans.  
-
-#### **Mockup:**  
-[View Mockup](https://kzmgtjqt0vx63yji8h9l.lite.vusercontent.net/)  
-(*The design doesn’t need to be an exact replica of the mockup—it serves as a reference. Aim to keep it as close as possible.*)  
-
----
-
-## **Bonus (Optional, Not Required)**
-
-* **Improve error handling and logging** with structured logs.
-* Implement **authentication**.
-* Create a **GitHub Actions** pipeline for building and testing the backend.
-
----
-
-## **Evaluation Criteria**
-
-✔ **Code quality** (clean architecture, modularization, best practices).
-
-✔ **Functionality** (the API and frontend should work as expected).
-
-✔ **Security considerations** (authentication, validation, secure API handling).
-
-✔ **Testing coverage** (unit tests for critical backend functions).
-
-✔ **Basic DevOps implementation** (Docker for backend).
-
----
-
-## **Additional Information**
-
-Candidates are encouraged to include a `README.md` file in their repository detailing their implementation approach, any challenges they faced, features they couldn't complete, and any improvements they would make given more time. Ideally, the implementation should be completed within **two days** of starting the test.
+- Replace the static user list in `appsettings.json` with a proper Users repository backed by SQL Server.
+- Harden authentication: add refresh tokens, token revocation, and role-based authorization.
+- Expand the frontend: add forms to create loans and make payments.
+- Containerize the frontend and include it in Docker Compose.
